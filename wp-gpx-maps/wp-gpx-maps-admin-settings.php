@@ -7,8 +7,11 @@
  * @package WP GPX Maps
  */
 
-if ( ! current_user_can( 'manage_options' ) )
+if ( ! current_user_can( 'manage_options' ) ){
+	echo '<div class="notice notice-error">No permission<p>';	
 	return;
+}
+
 
 /* General */
 $distanceType   = get_option( 'wpgpxmaps_distance_type' );
@@ -53,503 +56,236 @@ if ( ! ( $t ) )
 if ( ! ( $po ) )
 	$po = 10;
 
-
-function write_row_checkbox($label_text, $input_name, $input_value, $input_helper ='')
-{
-return strtr('<tr>
-	<th scope="row">$left</th>
-	<td>$right <em>$helper</em></td>
-</tr>', array( 
-	'$left' => esc_html( $label_text, 'wp-gpx-maps' ), 
-	'$right' => "<input name=\"$input_name\" type=\"checkbox\" value=\"true\" ". ( true == $input_value ? 'checked' : '' ) ." onchange=\"this.value = (this.checked)\" />", 
-	'$helper' => $input_helper
-	)
-);
+function render_color_input($name, $label, $value, $style = 'width:50px;') {
+	echo "<tr>
+			<th scope='row'>".esc_html($label)."</th>
+			<td><input name='".esc_attr($name)."' type='color' id='".esc_attr($name)."' value='".esc_attr($value)."' style='".esc_attr($style)."' /></td>
+			</tr>";
+}
 	
+
+function render_text_input($name, $label, $value, $style = 'width:50px;', $appendHtml = '') {
+	echo "<tr>
+			<th scope='row'>".esc_html($label)."</th>
+			<td><input name='".esc_attr($name)."' type='text' id='".esc_attr($name)."' value='".esc_attr($value)."' style='".esc_attr($style)."' />".esc_html($appendHtml)."</td>
+		  </tr>";
 }
 
-function write_row_input($label_text, $input_name, $input_helper='', $input_width = 80)
-{
-return strtr('<tr>
-	<th scope="row">$left</th>
-	<td>$right <em>$helper</em></td>
-</tr>', array( 
-	'$left' => esc_html( $label_text, 'wp-gpx-maps' ), 
-	'$right' => "<input name=\"$input_name\" type=\"text\" id=\"$input_name\" value=\"".esc_attr(get_option($input_name))."\" style=\"width:{$input_width}px;\" />", 
-	'$helper' => $input_helper 
-	)
-);
-	
+function render_checkbox($name, $label, $value) {
+	$checked = $value ? 'checked' : '';
+	echo "<tr>
+			<th scope='row'>".esc_html($label)."</th>
+			<td><input name='".esc_attr($name)."' type='checkbox' value='true' ".esc_attr($checked)." onchange='this.value = (this.checked)' />
+			<i>".esc_html($label)."</i></td>
+		  </tr>";
 }
 
-function write_row_input_color($label_text, $input_name, $input_helper='', $input_width = 80)
-{
-return strtr('<tr>
-	<th scope="row">$left</th>
-	<td>$right <em>$helper</em></td>
-</tr>', array( 
-	'$left' => esc_html( $label_text, 'wp-gpx-maps' ), 
-	'$right' => "<input name=\"$input_name\" type=\"color\" data-hex=\"true\" id=\"$input_name\" value=\"".esc_attr(get_option($input_name))."\" style=\"width:{$input_width}px;\" />", 
-	'$helper' => $input_helper 
-	)
-);
-	
+function render_radio($name, $label, $options, $checked) {
+	echo "<tr>
+			<th scope='row'>".esc_html($label)."</th>
+			<td>";
+	foreach ($options as $value => $text) {
+		$isChecked = $value == $checked ? 'checked' : '';
+		echo "<input type='radio' name='".esc_attr($name)."' id='".esc_attr($name.'-'.$value)."' value='".esc_attr($value)."' ".esc_attr($isChecked)." ><label for='".esc_attr($name.'-'.$value)."' /> ".esc_html( $text, 'wp-gpx-maps' )."</label> <br />";
+		//echo "<option value='$value' $isSelected>".esc_html($text)."</option>";
+	}
+	echo "</td></tr>";
 }
 
 
-function write_input($input_name, $input_width = 80)
-{
-	return "<input name=\"$input_name\" type=\"text\" id=\"$input_name\" value=\"".esc_attr(get_option($input_name))."\" style=\"width:{$input_width}px;\" />";
+function render_select($name, $label, $options, $selected) {
+	echo "<tr>
+			<th scope='row'>".esc_html($label)."</th>
+			<td><select name='".esc_attr($name)."'>";
+	foreach ($options as $value => $text) {
+		$isSelected = $value == $selected ? 'selected' : '';
+		echo "<option value='".esc_attr($value)."' ".esc_attr($isSelected).">".esc_html($text)."</option>";
+	}
+	echo "</select></td></tr>";
 }
 
 ?>
 
 <!-- The First Div (for body) starts in wp-gpx-admin.php -->
 
-	<div class="wpgpxmaps-container-tab-settings">
+<div class="wpgpxmaps-container-tab-settings">
 
-		<form method="post" action="options.php">
-			<?php wp_nonce_field( 'update-options' ); ?>
+	<form method="post" action="options.php">
+		<?php wp_nonce_field( 'update-options' ); ?>
 
-			<h3 class="title">
-				<?php esc_html_e( 'General', 'wp-gpx-maps' ); ?>
-			</h3>
+		<h3 class="title"><?php esc_html_e( 'General', 'wp-gpx-maps' ); ?></h3>
+		<table class="form-table">
+			<?php
+			render_text_input('wpgpxmaps_width', 'Map width:', get_option('wpgpxmaps_width'));
+			render_text_input('wpgpxmaps_height', 'Map height:', get_option('wpgpxmaps_height'));
+			render_text_input('wpgpxmaps_graph_height', 'Graph height:', get_option('wpgpxmaps_graph_height'));
+			render_select('wpgpxmaps_distance_type', 'Distance type:', [
+				'0' => 'Normal (default)',
+				'1' => 'Flat &#8594; (Only flat distance, don&#8217;t take care of altitude)',
+				'2' => 'Climb &#8593; (Only climb distance)'
+			], $distanceType);
+			render_checkbox('wpgpxmaps_skipcache', 'Cache:', $skipcache);
+			render_checkbox('wpgpxmaps_download', 'GPX Download:', $download);
+			render_checkbox('wpgpxmaps_usegpsposition', 'Use browser GPS position:', $usegpsposition);
+			render_text_input('wpgpxmaps_openstreetmap_apikey', 'Thunderforest API Key (Open Cycle Map):', get_option('wpgpxmaps_openstreetmap_apikey'), 'width:400px');
+			render_text_input('wpgpxmaps_mapbox_apikey', 'Mapbox API Key:', get_option('wpgpxmaps_mapbox_apikey'), 'width:400px');
 
-			<table class="form-table">
-			
-			<? echo write_row_input('Map width:', 'wpgpxmaps_width') ?>
-			
-			<? echo write_row_input('Map height:', 'wpgpxmaps_height') ?>
-
-			<? echo write_row_input('Graph height:', 'wpgpxmaps_graph_height') ?>
-
-			<tr>
-				<th scope="row">
-					<?php esc_html_e( 'Distance type:', 'wp-gpx-maps' ); ?>
-				</th>
-				<td>
-					<select name='wpgpxmaps_distance_type'>
-						<option value="0" <?php if ( '0' == $distanceType || '' == $distanceType ) echo 'selected'; ?>>
-							<?php esc_html_e( 'Normal (default)', 'wp-gpx-maps' ); ?>
-						</option>
-						<option value="1" <?php if ( '1' == $distanceType ) echo 'selected'; ?>>
-							<?php esc_html_e( 'Flat &#8594; (Only flat distance, don&#8217;t take care of altitude)', 'wp-gpx-maps' ); ?>
-						</option>
-						<option value="2" <?php if ( '2' == $distanceType ) echo 'selected'; ?>>
-							<?php esc_html_e( 'Climb &#8593; (Only climb distance)', 'wp-gpx-maps' ); ?>
-						</option>
-					</select>
-				</td>
-			</tr>
-			
-			<? echo write_row_checkbox( 'Cache:', 'wpgpxmaps_skipcache', $skipcache, esc_html( 'Do not use cache', 'wp-gpx-maps' ) ); ?>
-
-			<? echo write_row_checkbox( 'GPX Download:', 'wpgpxmaps_download', $download, esc_html( 'Allow users to download your GPX file', 'wp-gpx-maps' ) ); ?>
-
-			<? echo write_row_checkbox( 'Use browser GPS position:', 'wpgpxmaps_usegpsposition', $usegpsposition, esc_html( 'Allow users to use browser GPS in order to display their current position on map', 'wp-gpx-maps' ) ); ?>
-
-			<? echo write_row_input('Thunderforest API Key (Open Cycle Map):', 
-									'wpgpxmaps_openstreetmap_apikey', 
-									'<a href="http://www.thunderforest.com/docs/apikeys/" target="_blank" rel="noopener noreferrer">Thunderforest API Key and signing in to your Thunderforest account.</a>', 
-									400 ) ?>
-
+			?>
 		</table>
 
 		<p class="submit">
 			<input type="hidden" name="action" value="update" />
-			<input name="page_options" type="hidden" value="wpgpxmaps_height,wpgpxmaps_graph_height,wpgpxmaps_width,wpgpxmaps_download,wpgpxmaps_skipcache,wpgpxmaps_distance_type,wpgpxmaps_usegpsposition,wpgpxmaps_openstreetmap_apikey" />
+			<input name="page_options" type="hidden" value="wpgpxmaps_height,wpgpxmaps_graph_height,wpgpxmaps_width,wpgpxmaps_download,wpgpxmaps_skipcache,wpgpxmaps_distance_type,wpgpxmaps_usegpsposition,wpgpxmaps_openstreetmap_apikey,wpgpxmaps_mapbox_apikey" />
 			<input type="submit" class="button-primary" value="<?php esc_html_e( 'Save Changes', 'wp-gpx-maps' ); ?>" />
 		</p>
+	</form>
 
-		</form>
+	<hr />
 
-		<hr />
+	<form method="post" action="options.php">
+		<?php wp_nonce_field( 'update-options' ); ?>
 
-		<form method="post" action="options.php">
-			<?php wp_nonce_field( 'update-options' ); ?>
+		<h3 class="title"><?php esc_html_e( 'Summary table', 'wp-gpx-maps' ); ?></h3>
+		<table class="form-table">
+			<?php
+			render_checkbox('wpgpxmaps_summary', 'Summary table:', $summary);
+			render_checkbox('wpgpxmaps_summary_tot_len', 'Total distance:', $tot_len);
+			render_checkbox('wpgpxmaps_summary_max_ele', 'Max elevation:', $max_ele);
+			render_checkbox('wpgpxmaps_summary_min_ele', 'Min elevation:', $min_ele);
+			render_checkbox('wpgpxmaps_summary_total_ele_up', 'Total climbing:', $total_ele_up);
+			render_checkbox('wpgpxmaps_summary_total_ele_down', 'Total descent:', $total_ele_down);
+			render_checkbox('wpgpxmaps_summary_avg_speed', 'Average speed:', $avg_speed);
+			render_checkbox('wpgpxmaps_summary_avg_cad', 'Average cadence:', $avg_cad);
+			render_checkbox('wpgpxmaps_summary_avg_hr', 'Average heart rate:', $avg_hr);
+			render_checkbox('wpgpxmaps_summary_avg_temp', 'Average temperature:', $avg_temp);
+			render_checkbox('wpgpxmaps_summary_total_time', 'Total time:', $total_time);
+			?>
+		</table>
 
-			<h3 class="title">
-				<?php esc_html_e( 'Summary table', 'wp-gpx-maps' ); ?>
-			</h3>
+		<p class="submit">
+			<input type="hidden" name="action" value="update" />
+			<input name="page_options" type="hidden" value="wpgpxmaps_summary,wpgpxmaps_summary_tot_len,wpgpxmaps_summary_max_ele,wpgpxmaps_summary_min_ele,wpgpxmaps_summary_total_ele_up,wpgpxmaps_summary_total_ele_down,wpgpxmaps_summary_avg_speed,wpgpxmaps_summary_avg_cad,wpgpxmaps_summary_avg_hr,wpgpxmaps_summary_avg_temp,wpgpxmaps_summary_total_time" />
+			<input type="submit" class="button-primary" value="<?php esc_html_e( 'Save Changes', 'wp-gpx-maps' ); ?>" />
+		</p>
+	</form>
 
-			<table class="form-table">
+	<hr />
+
+	<form method="post" action="options.php">
+		<?php wp_nonce_field( 'update-options' ); ?>
+
+		<h3 class="title"><?php esc_html_e( 'Map', 'wp-gpx-maps' ); ?></h3>
+		<table class="form-table">
+
+			<?php
 			
-				<? echo write_row_checkbox( 'Summary table:', 'wpgpxmaps_summary', $summary, esc_html( 'Print summary details of your GPX track', 'wp-gpx-maps' ) ); ?>
+				render_radio('wpgpxmaps_map_type', 'Default map type:', [
+				'OSM1' => 'Open Street Map',
+				'OSM2' => 'Open Cycle Map / Thunderforest - Open Cycle Map (API Key required)',
+				'OSM3' => 'Thunderforest - Outdoors (API Key required)',
+				'OSM4' => 'Thunderforest - Transport (API Key required)',
+				'OSM5' => 'Thunderforest - Landscape (API Key required)',
+				'OSM6' => 'MapToolKit - Terrain',
+				'OSM7' => 'Open Street Map - Humanitarian map style',
+				'OSM9' => 'Hike & Bike',
+				'OSM10' => 'Open Sea Map',
+				'OSM11' => 'GSI Map (Japan)'
+			], $t);			
+			render_text_input('wpgpxmaps_map_line_color', 'Map line color:', get_option('wpgpxmaps_map_line_color'), 'width:100px;');
+			render_checkbox('wpgpxmaps_zoomonscrollwheel', 'On mouse scroll wheel:', $zoomonscrollwheel);
+			render_checkbox('wpgpxmaps_show_waypoint', 'Waypoints support:', $showW);
+			render_text_input('wpgpxmaps_map_start_icon', 'Start track icon:', get_option('wpgpxmaps_map_start_icon'), 'width:400px;');
+			render_text_input('wpgpxmaps_map_end_icon', 'End track icon:', get_option('wpgpxmaps_map_end_icon'), 'width:400px;');
+			render_text_input('wpgpxmaps_map_current_icon', 'Current position icon:', get_option('wpgpxmaps_map_current_icon'), 'width:400px;');
+			render_text_input('wpgpxmaps_currentpositioncon', 'Current GPS position icon:', get_option('wpgpxmaps_currentpositioncon'), 'width:400px;');
+			render_text_input('wpgpxmaps_map_waypoint_icon', 'Custom waypoint icon:', get_option('wpgpxmaps_map_waypoint_icon'), 'width:400px;');
+			?>
+		</table>
 
-				<? echo write_row_checkbox( 'Total distance:', 'wpgpxmaps_summary_tot_len', $tot_len, esc_html( 'Print total distance', 'wp-gpx-maps' ) ); ?>
+		<p class="submit">
+			<input type="hidden" name="action" value="update" />
+			<input name="page_options" type="hidden" value="wpgpxmaps_map_type,wpgpxmaps_map_line_color,wpgpxmaps_zoomonscrollwheel,wpgpxmaps_show_waypoint,wpgpxmaps_map_start_icon,wpgpxmaps_map_end_icon,wpgpxmaps_map_current_icon,wpgpxmaps_currentpositioncon,wpgpxmaps_map_waypoint_icon" />
+			<input type="submit" class="button-primary" value="<?php esc_html_e( 'Save Changes', 'wp-gpx-maps' ); ?>" />
+		</p>
+	</form>
 
-				<? echo write_row_checkbox( 'Max elevation:', 'wpgpxmaps_summary_max_ele', $max_ele, esc_html( 'Print max elevation', 'wp-gpx-maps' ) ); ?>
+	<hr />
 
-				<? echo write_row_checkbox( 'Min elevation:', 'wpgpxmaps_summary_min_ele', $min_ele, esc_html( 'Print min elevation', 'wp-gpx-maps' ) ); ?>
+	<form method="post" action="options.php">
+		<?php wp_nonce_field( 'update-options' ); ?>
 
-				<? echo write_row_checkbox( 'Total climbing:', 'wpgpxmaps_summary_total_ele_up', $total_ele_up, esc_html( 'Print total climbing', 'wp-gpx-maps' ) ); ?>
+		<h3 class="title"><?php esc_html_e( 'Chart', 'wp-gpx-maps' ); ?></h3>
+		<table class="form-table">
+			<tr>
+				<th scope="row"><?php esc_html_e( 'Altitude:', 'wp-gpx-maps' ); ?></th>
+				<td>
+					<input type="checkbox" <?php if ( true == $showEle ) { echo( 'checked' ); } ?> onchange="wpgpxmaps_show_elevation.value = this.checked" onload="wpgpxmaps_show_elevation.value = this.checked" />
+					<i><?php esc_html_e( 'Show altitude', 'wp-gpx-maps' ); ?></i>
+					<input name="wpgpxmaps_show_elevation" type="hidden" value="<?php echo(esc_attr($showEle)) ?>">
+				</td>
+			</tr>
+			<?php
+			render_text_input('wpgpxmaps_graph_line_color', 'Altitude line color:', get_option('wpgpxmaps_graph_line_color'), 'width:100px;');
+			render_select('wpgpxmaps_unit_of_measure', 'Unit of measure:', [
+				'0' => 'meters / meters',
+				'1' => 'feet / miles',
+				'2' => 'meters / kilometers',
+				'3' => 'meters / nautical miles',
+				'4' => 'meters / miles',
+				'5' => 'feet / nautical miles'
+			], $uom);
+			render_text_input('wpgpxmaps_graph_offset_from1', 'Altitude display offset from:', get_option('wpgpxmaps_graph_offset_from1'));
+			render_text_input('wpgpxmaps_graph_offset_to1', 'Altitude display offset to:', get_option('wpgpxmaps_graph_offset_to1'));
+			render_checkbox('wpgpxmaps_show_speed', 'Speed:', $showSpeed);
+			render_text_input('wpgpxmaps_graph_line_color_speed', 'Speed line color:', get_option('wpgpxmaps_graph_line_color_speed'), 'width:100px;');
+			render_select('wpgpxmaps_unit_of_measure_speed', 'Speed unit of measure:', [
+				'0' => 'm/s',
+				'1' => 'km/h',
+				'2' => 'miles/h',
+				'3' => 'min/km',
+				'4' => 'min/miles',
+				'5' => 'Knots (nautical miles / hour)',
+				'6' => 'min/100 meters'
+			], $uomSpeed);
+			render_text_input('wpgpxmaps_graph_offset_from2', 'Speed display offset from:', get_option('wpgpxmaps_graph_offset_from2'));
+			render_text_input('wpgpxmaps_graph_offset_to2', 'Speed display offset to:', get_option('wpgpxmaps_graph_offset_to2'));
+			render_checkbox('wpgpxmaps_show_hr', 'Heart rate (where available):', $showHr);
+			render_text_input('wpgpxmaps_graph_line_color_hr', 'Heart rate line color:', get_option('wpgpxmaps_graph_line_color_hr'), 'width:100px;');
+			render_checkbox('wpgpxmaps_show_atemp', 'Temperature (where available):', $showAtemp);
+			render_text_input('wpgpxmaps_graph_line_color_atemp', 'Temperature line color:', get_option('wpgpxmaps_graph_line_color_atemp'), 'width:100px;');
+			render_checkbox('wpgpxmaps_show_cadence', 'Cadence (where available):', $showCad);
+			render_text_input('wpgpxmaps_graph_line_color_cad', 'Cadence line color:', get_option('wpgpxmaps_graph_line_color_cad'), 'width:100px;');
+			render_checkbox('wpgpxmaps_show_grade', 'Grade:', $showGrade);
+			render_text_input('wpgpxmaps_graph_line_color_grade', 'Grade line color:', get_option('wpgpxmaps_graph_line_color_grade'), 'width:100px;');
+			?>
+		</table>
 
-				<? echo write_row_checkbox( 'Total descent:', 'wpgpxmaps_summary_total_ele_down', $total_ele_down, esc_html( 'Print total descent', 'wp-gpx-maps' ) ); ?>
+		<p class="submit">
+			<input type="hidden" name="action" value="update" />
+			<input name="page_options" type="hidden" value="wpgpxmaps_show_elevation,wpgpxmaps_graph_line_color,wpgpxmaps_unit_of_measure,wpgpxmaps_show_speed,wpgpxmaps_graph_line_color_speed,wpgpxmaps_show_hr,wpgpxmaps_graph_line_color_hr,wpgpxmaps_unit_of_measure_speed,wpgpxmaps_graph_offset_from1,wpgpxmaps_graph_offset_to1,wpgpxmaps_graph_offset_from2,wpgpxmaps_graph_offset_to2,wpgpxmaps_graph_line_color_cad,wpgpxmaps_show_cadence,wpgpxmaps_show_grade,wpgpxmaps_graph_line_color_grade,wpgpxmaps_show_atemp,wpgpxmaps_graph_line_color_atemp" />
+			<input type="submit" class="button-primary" value="<?php esc_html_e( 'Save Changes', 'wp-gpx-maps' ); ?>" />
+		</p>
+	</form>
 
-				<? echo write_row_checkbox( 'Average speed:', 'wpgpxmaps_summary_avg_speed', $avg_speed, esc_html( 'Print average speed', 'wp-gpx-maps' ) ); ?>
+	<hr />
 
-				<? echo write_row_checkbox( 'Average cadence:', 'wpgpxmaps_summary_avg_cad', $avg_cad, esc_html( 'Print average cadence', 'wp-gpx-maps' ) ); ?>
+	<form method="post" action="options.php">
+		<?php wp_nonce_field( 'update-options' ); ?>
 
-				<? echo write_row_checkbox( 'Average heart rate:', 'wpgpxmaps_summary_avg_hr', $avg_hr, esc_html( 'Print average heart rate', 'wp-gpx-maps' ) ); ?>
+		<h3 class="title"><?php esc_html_e( 'Advanced Options', 'wp-gpx-maps' ); ?></h3>
+		<em><?php esc_html_e( '(Do not edit if you don&#8217;t know what you are doing!)', 'wp-gpx-maps' ); ?></em>
+		<table class="form-table">
+			<?php
+			render_text_input('wpgpxmaps_pointsoffset', 'Skip GPX points closer than:', $po);
+			render_checkbox('wpgpxmaps_donotreducegpx', 'Reduce GPX:', $donotreducegpx);
+			?>
+		</table>
 
-				<? echo write_row_checkbox( 'Average temperature:', 'wpgpxmaps_summary_avg_temp', $avg_temp, esc_html( 'Print average temperature', 'wp-gpx-maps' ) ); ?>
-
-				<? echo write_row_checkbox( 'Total time:', 'wpgpxmaps_summary_total_time', $total_time, esc_html( 'Print total time', 'wp-gpx-maps' ) ); ?>
-
-			</table>
-
-			<p class="submit">
-				<input type="hidden" name="action" value="update" />
-				<input name="page_options" type="hidden" value="wpgpxmaps_summary,wpgpxmaps_summary_tot_len,wpgpxmaps_summary_max_ele,wpgpxmaps_summary_min_ele,wpgpxmaps_summary_total_ele_up,wpgpxmaps_summary_total_ele_down,wpgpxmaps_summary_avg_speed,wpgpxmaps_summary_avg_cad,wpgpxmaps_summary_avg_hr,wpgpxmaps_summary_avg_temp,wpgpxmaps_summary_total_time" />
-				<input type="submit" class="button-primary" value="<?php esc_html_e( 'Save Changes', 'wp-gpx-maps' ); ?>" />
-			</p>
-
-		</form>
-
-		<hr />
-
-		<form method="post" action="options.php">
-			<?php wp_nonce_field( 'update-options' ); ?>
-
-			<h3 class="title">
-				<?php esc_html_e( 'Map', 'wp-gpx-maps' ); ?>
-			</h3>
-
-			<table class="form-table">
-
-				<tr>
-					<th scope="row">
-						<?php esc_html_e( 'Default map type:', 'wp-gpx-maps' ); ?>
-					</th>
-					<td>
-						<input type="radio" name="wpgpxmaps_map_type" value="OSM1" <?php if ( 'OSM1' == $t ) echo 'checked'; ?>>
-							<?php
-							/* translators: map type */
-							esc_html_e( 'Open Street Map', 'wp-gpx-maps' );
-							?>
-						<br />
-						<input type="radio" name="wpgpxmaps_map_type" value="OSM2" <?php if ( 'OSM2' == $t ) echo 'checked'; ?>>
-							<?php
-							/* translators: map provider / map type */
-							esc_html_e( 'Open Cycle Map / Thunderforest - Open Cycle Map (API Key required)', 'wp-gpx-maps' );
-							?>
-						<br />
-						<input type="radio" name="wpgpxmaps_map_type" value="OSM3" <?php if ( 'OSM3' == $t ) echo 'checked'; ?>>
-							<?php
-							/* translators: map provider / map type */
-							esc_html_e( 'Thunderforest - Outdoors (API Key required)', 'wp-gpx-maps' );
-							?>
-						<br />
-						<input type="radio" name="wpgpxmaps_map_type" value="OSM4" <?php if ( 'OSM4' == $t ) echo 'checked'; ?>>
-							<?php
-							/* translators: map provider / map type */
-							esc_html_e( 'Thunderforest - Transport (API Key required)', 'wp-gpx-maps' );
-							?>
-						<br />
-						<input type="radio" name="wpgpxmaps_map_type" value="OSM5" <?php if ( 'OSM5' == $t ) echo 'checked'; ?>>
-							<?php
-							/* translators: map provider / map type */
-							esc_html_e( 'Thunderforest - Landscape (API Key required)', 'wp-gpx-maps' );
-							?>
-						<br />
-						<!-- <input type="radio" name="wpgpxmaps_map_type" value="OSM6" <?php if ( 'OSM6' == $t ) echo 'checked'; ?>>-->
-							<?php
-							/* translators: map provider / map type */
-							//esc_html_e( 'MapToolKit - Terrain', 'wp-gpx-maps' );
-							?>
-						<!--<br />-->
-						<input type="radio" name="wpgpxmaps_map_type" value="OSM7" <?php if ( 'OSM7' == $t ) echo 'checked'; ?>>
-							<?php
-							/* translators: map provider / map type */
-							esc_html_e( 'Open Street Map - Humanitarian map style', 'wp-gpx-maps' );
-							?>
-						<br />
-						<input type="radio" name="wpgpxmaps_map_type" value="OSM9" <?php if ( 'OSM9' == $t ) echo 'checked'; ?>>
-							<?php
-							/* translators: map provider / map type */
-							esc_html_e( 'Hike & Bike', 'wp-gpx-maps' );
-							?>
-						<br />
-						<input type="radio" name="wpgpxmaps_map_type" value="OSM10" <?php if ( 'OSM10' == $t ) echo 'checked'; ?>>
-							<?php
-							/* translators: map provider / map type */
-							esc_html_e( 'Open Sea Map', 'wp-gpx-maps' );
-							?>
-						<br />
-						<input type="radio" name="wpgpxmaps_map_type" value="OSM11" <?php if ( $t == 'OSM11' ) echo 'checked'; ?>>
-							<?php
-							echo ' ';
-							_e( 'GSI Map (Japan)', 'wp-gpx-maps' );
-							?>
-						<br />
-					</td>
-				</tr>
-
-				<? echo write_row_input_color('Map line color:', 'wpgpxmaps_map_line_color' ) ?>
-
-				<? echo write_row_checkbox( 'On mouse scroll wheel:', 'wpgpxmaps_zoomonscrollwheel', $zoomonscrollwheel, esc_html( 'Enable zoom', 'wp-gpx-maps' ) ); ?>
-
-				<? echo write_row_checkbox( 'Waypoints support:', 'wpgpxmaps_show_waypoint', $showW, esc_html( 'Show waypoints', 'wp-gpx-maps' ) ); ?>
-
-
-				<? echo write_row_input('Start track icon:', 
-										'wpgpxmaps_map_start_icon', 
-										esc_html( '(URL to image) Leave empty to hide.', 'wp-gpx-maps' ), 
-										400 ) ?>
-										
-				<? echo write_row_input('End track icon:', 
-										'wpgpxmaps_map_end_icon', 
-										esc_html( '(URL to image) Leave empty to hide.', 'wp-gpx-maps' ), 
-										400 ) ?>
-										
-				<? echo write_row_input('Current position icon:', 
-										'wpgpxmaps_map_current_icon', 
-										esc_html( '(URL to image) Leave empty to hide.', 'wp-gpx-maps' ), 
-										400 ) ?>
-										
-										
-				<? echo write_row_input('Current GPS position icon:', 
-										'wpgpxmaps_currentpositioncon', 
-										esc_html( '(URL to image) Leave empty to hide.', 'wp-gpx-maps' ), 
-										400 ) ?>
-										
-				<? echo write_row_input('Custom waypoint icon:', 
-										'wpgpxmaps_map_waypoint_icon', 
-										esc_html( '(URL to image) Leave empty to hide.', 'wp-gpx-maps' ), 
-										400 ) ?>
-									
-
-			</table>
-
-			<p class="submit">
-				<input type="hidden" name="action" value="update" />
-				<input name="page_options" type="hidden" value="wpgpxmaps_map_type,wpgpxmaps_map_line_color,wpgpxmaps_zoomonscrollwheel,wpgpxmaps_show_waypoint,wpgpxmaps_map_start_icon,wpgpxmaps_map_end_icon,wpgpxmaps_map_current_icon,wpgpxmaps_currentpositioncon,wpgpxmaps_map_waypoint_icon" />
-				<input type="submit" class="button-primary" value="<?php esc_html_e( 'Save Changes', 'wp-gpx-maps' ); ?>" />
-			</p>
-
-		</form>
-
-		<hr />
-
-		<form method="post" action="options.php">
-			<?php wp_nonce_field( 'update-options' ); ?>
-
-			<h3 class="title">
-				<?php esc_html_e( 'Chart', 'wp-gpx-maps' ); ?>
-			</h3>
-
-			<table class="form-table">
-
-				<? echo write_row_checkbox( 'Altitude:', 'wpgpxmaps_show_elevation', $showEle, esc_html( 'Show altitude', 'wp-gpx-maps' ) ); ?>
-
-				<? echo write_row_input_color('Altitude line color:', 'wpgpxmaps_graph_line_color' ) ?>
-
-				<tr>
-					<th scope="row">
-						<?php esc_html_e( 'Unit of measure:', 'wp-gpx-maps' ); ?>
-					</th>
-					<td>
-						<select name='wpgpxmaps_unit_of_measure'>
-							<option value="0" <?php if ( '0' == $uom ) echo 'selected'; ?>>
-								<?php
-								/* translators: chart axis labels */
-								esc_html_e( 'meters / meters', 'wp-gpx-maps' );
-								?>
-							</option>
-							<option value="1" <?php if ( '1' == $uom ) echo 'selected'; ?>>
-								<?php
-								/* translators: chart axis labels */
-								esc_html_e( 'feet / miles', 'wp-gpx-maps' );
-								?>
-							</option>
-							<option value="2" <?php if ( '2' == $uom ) echo 'selected'; ?>>
-								<?php
-								/* translators: chart axis labels */
-								esc_html_e( 'meters / kilometers', 'wp-gpx-maps' );
-								?>
-							</option>
-							<option value="3" <?php if ( '3' == $uom ) echo 'selected'; ?>>
-								<?php
-								/* translators: chart axis labels */
-								esc_html_e( 'meters / nautical miles', 'wp-gpx-maps' );
-								?>
-							</option>
-							<option value="4" <?php if ( '4' == $uom ) echo 'selected'; ?>>
-								<?php
-								/* translators: chart axis labels */
-								esc_html_e( 'meters / miles', 'wp-gpx-maps' );
-								?>
-							</option>
-							<option value="5" <?php if ( '5' == $uom ) echo 'selected'; ?>>
-								<?php
-								/* translators: chart axis labels */
-								esc_html_e( 'feet / nautical miles', 'wp-gpx-maps' );
-								?>
-							</option>
-						</select>
-					</td>
-				</tr>
-
-				<tr>
-					<th scope="row">
-						<?php esc_html_e( 'Altitude display offset:', 'wp-gpx-maps' ); ?>
-					</th>
-					<td>
-						<?php esc_html_e( 'From', 'wp-gpx-maps' ); ?>					
-						<? echo write_input('wpgpxmaps_graph_offset_from1') ?>
-						<?php esc_html_e( 'to', 'wp-gpx-maps' ); ?>
-						<? echo write_input('wpgpxmaps_graph_offset_to1') ?>
-						<em>
-							<?php esc_html_e( '(leave empty for auto scale)', 'wp-gpx-maps' ); ?>
-						</em>
-					</td>
-				</tr>
-
-				<? echo write_row_checkbox( 'Speed:', 'wpgpxmaps_show_speed', $showSpeed, esc_html( 'Show speed', 'wp-gpx-maps' ) ); ?>
-		
-				<? echo write_row_input_color('Speed line color:', 'wpgpxmaps_graph_line_color_speed' ) ?>
-
-				<tr>
-					<th scope="row">
-						<?php esc_html_e( 'Speed unit of measure:', 'wp-gpx-maps' ); ?>
-					</th>
-					<td>
-						<select name='wpgpxmaps_unit_of_measure_speed'>
-							<option value="0" <?php if ( '0' == $uomSpeed ) echo 'selected'; ?>>
-								<?php
-								/* translators: speed unit of measure */
-								esc_html_e( 'm/s', 'wp-gpx-maps' );
-								?>
-							</option>
-							<option value="1" <?php if ( '1' == $uomSpeed ) echo 'selected'; ?>>
-								<?php
-								/* translators: speed unit of measure */
-								esc_html_e( 'km/h', 'wp-gpx-maps' );
-								?>
-							</option>
-							<option value="2" <?php if ( '2' == $uomSpeed ) echo 'selected'; ?>>
-								<?php
-								/* translators: speed unit of measure */
-								esc_html_e( 'miles/h', 'wp-gpx-maps' );
-								?>
-							</option>
-							<option value="3" <?php if ( '3' == $uomSpeed ) echo 'selected'; ?>>
-								<?php
-								/* translators: speed unit of measure */
-								esc_html_e( 'min/km', 'wp-gpx-maps' );
-								?>
-							</option>
-							<option value="4" <?php if ( '4' == $uomSpeed ) echo 'selected'; ?>>
-								<?php
-								/* translators: speed unit of measure */
-								esc_html_e( 'min/miles', 'wp-gpx-maps' );
-								?>
-							</option>
-							<option value="5" <?php if ( '5' == $uomSpeed ) echo 'selected'; ?>>
-								<?php
-								/* translators: speed unit of measure */
-								esc_html_e( 'Knots (nautical miles / hour)', 'wp-gpx-maps' );
-								?>
-							</option>
-							<option value="6" <?php if ( '6' == $uomSpeed ) echo 'selected'; ?>>
-								<?php
-								/* translators: speed unit of measure */
-								esc_html_e( 'min/100 meters', 'wp-gpx-maps' );
-								?>
-							</option>
-						</select>
-					</td>
-				</tr>
-
-				<tr>
-					<th scope="row">
-						<?php esc_html_e( 'Speed display offset:', 'wp-gpx-maps' ); ?>
-					</th>
-					<td>
-						<?php esc_html_e( 'From', 'wp-gpx-maps' ); ?>
-						<? echo write_input('wpgpxmaps_graph_offset_from2') ?>
-						<?php esc_html_e( 'to', 'wp-gpx-maps' ); ?>
-						<? echo write_input('wpgpxmaps_graph_offset_to2') ?>
-						<em>
-							<?php esc_html_e( '(leave empty for auto scale)', 'wp-gpx-maps' ); ?>
-						</em>
-					</td>
-				</tr>
-
-				<? echo write_row_checkbox( 'Heart rate (where aviable):', 'wpgpxmaps_show_hr', $showHr, esc_html( 'Show heart rate', 'wp-gpx-maps' ) ); ?>
-
-				<? echo write_row_input_color( 'Heart rate line color:', 'wpgpxmaps_graph_line_color_hr' ) ?>
-
-				<? echo write_row_checkbox( 'Temperature (where aviable):', 'wpgpxmaps_show_atemp', $showAtemp, esc_html( 'Show temperature', 'wp-gpx-maps' ) ); ?>
-
-				<? echo write_row_input_color('Temperature line color:', 'wpgpxmaps_graph_line_color_atemp' ) ?>
-
-				<? echo write_row_checkbox( 'Cadence (where aviable):', 'wpgpxmaps_show_cadence', $showCad, esc_html( 'Show cadence', 'wp-gpx-maps' ) ); ?>
-
-				<? echo write_row_input_color('Cadence line color:', 'wpgpxmaps_graph_line_color_cad' ) ?>
-
-				<? echo write_row_checkbox( 'Grade:', 'wpgpxmaps_show_grade', $showGrade, esc_html( 'Show grade - BETA (Grade values depends on your GPS accuracy. If you have a poor GPS accuracy they might be totally wrong!)', 'wp-gpx-maps' ) ); ?>
-
-				<? echo write_row_input_color('Grade line color:', 'wpgpxmaps_graph_line_color_grade' ) ?>
-
-			</table>
-
-			<p class="submit">
-				<input type="hidden" name="action" value="update" />
-				<input name="page_options" type="hidden" value="wpgpxmaps_show_elevation,wpgpxmaps_graph_line_color,wpgpxmaps_unit_of_measure,wpgpxmaps_show_speed,wpgpxmaps_graph_line_color_speed,wpgpxmaps_show_hr,wpgpxmaps_graph_line_color_hr,wpgpxmaps_unit_of_measure_speed,wpgpxmaps_graph_offset_from1,wpgpxmaps_graph_offset_to1,wpgpxmaps_graph_offset_from2,wpgpxmaps_graph_offset_to2,wpgpxmaps_graph_line_color_cad,wpgpxmaps_show_cadence,wpgpxmaps_show_grade,wpgpxmaps_graph_line_color_grade,wpgpxmaps_show_atemp,wpgpxmaps_graph_line_color_atemp" />
-				<input type="submit" class="button-primary" value="<?php esc_html_e( 'Save Changes', 'wp-gpx-maps' ); ?>" />
-			</p>
-
-		</form>
-
-		<hr />
-
-		<form method="post" action="options.php">
-			<?php wp_nonce_field( 'update-options' ); ?>
-
-			<h3 class="title">
-				<?php esc_html_e( 'Advanced Options', 'wp-gpx-maps' ); ?>
-			</h3>
-			<em>
-				<?php esc_html_e( '(Do not edit if you don&#8217;t know what you are doing!)', 'wp-gpx-maps' ); ?>
-			</em>
-
-			<table class="form-table">
-
-				<tr>
-					<th scope="row">
-						<?php esc_html_e( 'Skip GPX points closer than:', 'wp-gpx-maps' ); ?>
-					</th>
-					<td>
-						<input name="wpgpxmaps_pointsoffset" type="text" id="wpgpxmaps_pointsoffset" value="<?php echo $po; ?>" style="width:50px;" />
-						<i>
-							<?php esc_html_e( 'meters', 'wp-gpx-maps' ); ?>
-						</i>
-					</td>
-				</tr>
-
-				<tr>
-					<th scope="row">
-						<?php esc_html_e( 'Reduce GPX:', 'wp-gpx-maps' ); ?>
-					</th>
-					<td>
-						<input name="wpgpxmaps_donotreducegpx" type="checkbox" value="true" <?php if ( true == $donotreducegpx ) { echo( 'checked' ); } ?> onchange="this.value = (this.checked)" />
-						<i>
-							<?php esc_html_e( 'Do not reduce GPX', 'wp-gpx-maps' ); ?>
-						</i>
-					</td>
-				</tr>
-
-			</table>
-
-			<p class="submit">
-				<input type="hidden" name="action" value="update" />
-				<input name="page_options" type="hidden" value="wpgpxmaps_donotreducegpx,wpgpxmaps_pointsoffset" />
-				<input type="submit" class="button-primary" value="<?php esc_html_e( 'Save Changes', 'wp-gpx-maps' ); ?>" />
-			</p>
-
-		</form>
-
-	</div>
+		<p class="submit">
+			<input type="hidden" name="action" value="update" />
+			<input name="page_options" type="hidden" value="wpgpxmaps_donotreducegpx,wpgpxmaps_pointsoffset" />
+			<input type="submit" class="button-primary" value="<?php esc_html_e( 'Save Changes', 'wp-gpx-maps' ); ?>" />
+		</p>
+	</form>
 
 </div>
