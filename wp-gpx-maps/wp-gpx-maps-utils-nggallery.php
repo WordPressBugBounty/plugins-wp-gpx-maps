@@ -27,11 +27,17 @@ function getNGGalleryImages( $ngGalleries, $ngImages, $dt, $lat, $lon, $dtoffset
 	try {
 		$pictures = array();
 		foreach ( $galids as $g ) {
-			$pictures = array_merge( $pictures, nggdb::get_gallery( $g ) );
+			$_pictures = @nggdb::get_gallery( $g );
+			$pictures = array_merge( $pictures, $_pictures );
 		}
 		foreach ( $imgids as $i ) {
-			array_push( $pictures, nggdb::find_image( $i ) );
+			$_picture = @nggdb::find_image( $i );
+			array_push( $pictures, $_picture );
 		}
+
+		//print_r($galids);
+
+		//print_r($imgids);
 
 		foreach ( $pictures as $p ) {
 			
@@ -92,14 +98,15 @@ function getNGGalleryImages( $ngGalleries, $ngImages, $dt, $lat, $lon, $dtoffset
 
 		}
 		/* START FIX NEXT GEN GALLERY 2.x */
-		if ( class_exists( 'C_Component_Registry' ) ) {
-			$renderer                  = C_Component_Registry::get_instance()->get_utility( 'I_Displayed_Gallery_Renderer' );
+		if ( class_exists( 'C_Displayed_Gallery_Renderer' ) ) 
+		{
+			$renderer                  = C_Displayed_Gallery_Renderer::get_instance();
 			$params['gallery_ids']     = $ngGalleries;
 			$params['image_ids']       = $ngImages;
 			$params['display_type']    = NEXTGEN_GALLERY_BASIC_THUMBNAILS;
 			$params['images_per_page'] = 999;
 			/* Salso add js references to get the gallery working */
-			$dummy = $renderer->display_images( $params );
+			$dummy = @$renderer->display_images( $params );
 
 			/* START FIX NEXT GEN GALLERY PRO */
 
@@ -116,6 +123,7 @@ function getNGGalleryImages( $ngGalleries, $ngImages, $dt, $lat, $lon, $dtoffset
 		/* END FIX NEXT GEN GALLERY 2.x */
 
 	} catch ( Exception $e ) {
+		$error .= $e->getMessage();
 		$error .= 'Error When Retrieving NextGen Gallery galleries/images: $e <br />';
 	}	
 	return $result;

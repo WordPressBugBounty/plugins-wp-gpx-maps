@@ -3,7 +3,7 @@
  * Plugin Name: WP-GPX-Maps
  * Plugin URI: http://www.devfarm.it/
  * Description: Draws a GPX track with altitude chart
- * Version: 1.7.10
+ * Version: 1.7.11
  * Author: Bastianon Massimo
  * Author URI: http://www.devfarm.it/
  * Text Domain: wp-gpx-maps
@@ -346,9 +346,10 @@ function wpgpxmaps_handle_shortcodes( $attr, $content = '' ) {
 		WP_Filesystem();
 	}
 
+
 	$gpxcache = gpxCacheFolderPath();
 
-	if ( ! ( file_exists( $gpxcache ) && is_dir( $gpxcache ) ) )
+	if ( ! ( $wp_filesystem->exists( $gpxcache ) && $wp_filesystem->is_dir( $gpxcache ) ) )
 	{
 		$wp_filesystem->mkdir( $gpxcache, 0755, true );
 		//@mkdir( $gpxcache, 0755, true );	
@@ -356,6 +357,7 @@ function wpgpxmaps_handle_shortcodes( $attr, $content = '' ) {
 
 
 	$gpxcache .= DIRECTORY_SEPARATOR . $cacheFileName . '.tmp';
+
 
 	/* Try to load cache */
 	if ( file_exists( $gpxcache ) && ! ( true == $skipcache ) ) {
@@ -411,6 +413,10 @@ function wpgpxmaps_handle_shortcodes( $attr, $content = '' ) {
 			$avgv_hr            = 0;
 			$avg_temp           = 0;
 			$tot_len            = 0;
+			
+			echo ( esc_html($e->getMessage()) );
+			echo ( esc_html("Error getting file $gpxcache from cache") );
+			
 		}
 	}
 
@@ -710,7 +716,7 @@ function wpgpxmaps_handle_shortcodes( $attr, $content = '' ) {
 				<div id="wpgpxmaps_' . esc_attr( $r ) . '_osm_footer" class="wpgpxmaps_osm_footer" style="display:none;"><span> &copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors</span></div>
 			</div>
 			<canvas id="myChart_' . esc_attr( $r ) . '" class="plot" style="width:' . esc_attr( $w ) . '; height:' . esc_attr( $gh ) . '"></canvas>
-			<div id="ngimages_' . esc_attr( $r ) . '" class="ngimages" style="display:none">' . wp_kses_post( $ngimgs_data ) . '</div>
+			<div id="ngimages_' . esc_attr( $r ) . '" class="ngimages" style="display:none">' . $ngimgs_data . '</div>
 			<div id="report_' . esc_attr( $r ) . '" class="report"></div>
 		</div>
 		' . esc_html( $error ) . '
