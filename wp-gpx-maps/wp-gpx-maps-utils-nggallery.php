@@ -1,7 +1,10 @@
 <?php
 
-function wpgpxmaps_isNGGalleryActive() {
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
+function wpgpxmaps_isNGGalleryActive() {
 	if ( ! function_exists( 'is_plugin_active' ) ) {
 		require_once( wp_gpx_maps_sitePath() . '/wp-admin/includes/plugin.php' );
 	}
@@ -9,12 +12,12 @@ function wpgpxmaps_isNGGalleryActive() {
 }
 
 function wpgpxmaps_isNGGalleryProActive() {
-
 	if ( ! function_exists( 'is_plugin_active' ) ) {
 		require_once( wp_gpx_maps_sitePath() . '/wp-admin/includes/plugin.php' );
 	}
 		return is_plugin_active( 'nextgen-gallery-pro/nggallery-pro.php' );
 }
+
 
 function getNGGalleryImages( $ngGalleries, $ngImages, $dt, $lat, $lon, $dtoffset, &$error ) {
 
@@ -22,22 +25,21 @@ function getNGGalleryImages( $ngGalleries, $ngImages, $dt, $lat, $lon, $dtoffset
 	$galids = explode( ',', $ngGalleries );
 	$imgids = explode( ',', $ngImages );
 
-	if ( ! wpgpxmaps_isNGGalleryActive() )
-	return '';
+	if ( ! wpgpxmaps_isNGGalleryActive() || ! class_exists( 'nggdb' ) )
+	return $result;
 	try {
 		$pictures = array();
 		foreach ( $galids as $g ) {
-			$_pictures = @nggdb::get_gallery( $g );
-			$pictures = array_merge( $pictures, $_pictures );
+			$gallery = nggdb::get_gallery( $g );
+			if ( is_array( $gallery ) ) {
+				$pictures = array_merge( $pictures, $gallery );
+			}
 		}
 		foreach ( $imgids as $i ) {
-			$_picture = @nggdb::find_image( $i );
-			array_push( $pictures, $_picture );
+			array_push( $pictures, nggdb::find_image( $i ) );
 		}
 
-		//print_r($galids);
-
-		//print_r($imgids);
+		//print_r($pictures);
 
 		foreach ( $pictures as $p ) {
 			
@@ -54,6 +56,7 @@ function getNGGalleryImages( $ngGalleries, $ngImages, $dt, $lat, $lon, $dtoffset
 					
 					$exif = @exif_read_data( $imagePath );
 					if ( $exif !== false && is_array($exif) && sizeof($exif) > 0 ) {
+
 						//print_r($exif);
 						
 						$GPSLongitude = 0;
@@ -94,19 +97,17 @@ function getNGGalleryImages( $ngGalleries, $ngImages, $dt, $lat, $lon, $dtoffset
 			} catch (Exception $e) {
 				//$error .= "Sorry, <a href='https://php.net/manual/en/function.exif-read-data.php' target='_blank' rel='noopener noreferrer'>exif_read_data</a> function not found! check your hosting.<br />";
 			}
-			
 
 		}
 		/* START FIX NEXT GEN GALLERY 2.x */
-		if ( class_exists( 'C_Displayed_Gallery_Renderer' ) ) 
-		{
+		if ( class_exists( 'C_Displayed_Gallery_Renderer' ) ) {
 			$renderer                  = C_Displayed_Gallery_Renderer::get_instance();
 			$params['gallery_ids']     = $ngGalleries;
 			$params['image_ids']       = $ngImages;
 			$params['display_type']    = NEXTGEN_GALLERY_BASIC_THUMBNAILS;
 			$params['images_per_page'] = 999;
 			/* Salso add js references to get the gallery working */
-			$dummy = @$renderer->display_images( $params );
+			$dummy = $renderer->display_images( $params );
 
 			/* START FIX NEXT GEN GALLERY PRO */
 
@@ -122,10 +123,9 @@ function getNGGalleryImages( $ngGalleries, $ngImages, $dt, $lat, $lon, $dtoffset
 		}
 		/* END FIX NEXT GEN GALLERY 2.x */
 
-	} catch ( Exception $e ) {
-		$error .= $e->getMessage();
-		$error .= 'Error When Retrieving NextGen Gallery galleries/images: $e <br />';
-	}	
+	} catch ( Throwable $e ) {
+		$error .= 'Error When Retrieving NextGen Gallery galleries/images: ' . $e->getMessage() . ' ';
+	}
 	return $result;
 }
 
@@ -134,6 +134,8 @@ function getNGGalleryImages( $ngGalleries, $ngImages, $dt, $lat, $lon, $dtoffset
 // $lat : all gpx latitude
 // $lon : all gpx longitude
 function findItemCoordinate( $imgdt, $dt, $lat, $lon ) {
+	if ( ! is_array( $dt ) )
+		return null;
 	$prevdt = 0;
 	foreach ( array_keys( $dt ) as $i ) {
 		if ( $i != 0 && $imgdt >= $prevdt && $imgdt <= $dt[$i] ) {
@@ -159,13 +161,13 @@ function getExifGps( $exifCoord, $hemi ) {
 
 function gps2Num( $coordPart ) {
 
-	$parts = explode( '/', $coordPart );
+	$parts = explode( '/', (string) $coordPart );
 
 	if ( count( $parts ) <= 0 )
 		return 0;
 
 	if ( count( $parts ) == 1 )
-		return $parts[0];
+		return floatval( $parts[0] );
 
 	$lat = floatval( $parts[0] );
 	$lon = floatval( $parts[1] );
