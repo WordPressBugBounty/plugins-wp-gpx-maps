@@ -1,16 +1,16 @@
-﻿=== WP GPX Maps ===
+﻿=== WP GPX Maps – GPX, FIT & KML maps with elevation profile ===
 
 Contributors: bastianonm, Stephan Klein, Michel Selerin, TosattoSimonePio, Kniebremser
 Donate link: https://github.com/sponsors/bastianonm
-Tags: gpx, maps, track, leaflet, elevation
+Tags: gpx, hiking, cycling, elevation profile, map
 Requires at least: 6.5
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 1.10.02
+Stable tag: 1.10.04
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-GPX, FIT and KML tracks on an interactive map with elevation and heart rate charts, 3D terrain and a route summary that AI assistants can read.
+Show your hikes, rides and runs from GPX, FIT, TCX or KML files on an interactive map with elevation profile, charts and route summary.
 
 == Description ==
 
@@ -19,6 +19,14 @@ WP GPX Maps turns a GPX, FIT, TCX or KML file into an interactive map and charts
 See how it works in under three minutes: the block, the shortcode, the charts, 3D maps and activities.
 
 https://www.youtube.com/watch?v=n55Yzw2ig7A
+
+= Fast, also with very long tracks =
+
+The map code is loaded only on the pages that show a map, and every map starts when it gets near the screen. Even long-distance trails open in a second or two. See them live:
+
+* [Camino Francés](https://devfarm.it/camino-frances-saint-jean-pied-de-port-to-santiago/): 769 km, 32,962 points, a 2 MB GPX file
+* [Alta Via 1 of the Dolomites](https://devfarm.it/alta-via-1-of-the-dolomites-lago-di-braies-to-belluno/): 120 km, 7,441 points
+* [Alta Via degli Eroi on Monte Grappa](https://devfarm.it/alta-via-degli-eroi-feltre-to-bassano-over-monte-grappa/): 40 km over the First World War front line
 
 = Maps =
 
@@ -59,7 +67,7 @@ A map drawn by JavaScript is invisible to ChatGPT, Perplexity, Google AI Overvie
 
 = Support and development =
 
-* Questions and bug reports: the [support forum](https://github.com/devfarm-it/wp-gpx-maps/discussions).
+* Questions and bug reports: the [support forum](https://wordpress.org/support/plugin/wp-gpx-maps/).
 * Development, issues and pull requests: [GitHub](https://github.com/devfarm-it/wp-gpx-maps).
 * Translations: [translate.wordpress.org](https://translate.wordpress.org/projects/wp-plugins/wp-gpx-maps/).
 * Support the development: [GitHub Sponsors](https://github.com/sponsors/bastianonm).
@@ -150,6 +158,17 @@ Yes, WP GPX Maps is free and open source (GPLv2 or later).
 7. The GPX Map block in the block editor: live preview and options in the sidebar.
 
 == Changelog ==
+
+= 1.10.04 =
+* New name on wordpress.org, "WP GPX Maps – GPX, FIT & KML maps with elevation profile", and new tags, so the plugin is easier to find
+* The "what's new" notice is shown only after a new version (for example 1.10 to 1.11), not after small fixes like this one
+* The readme links to the wordpress.org support forum
+
+= 1.10.03 =
+* Fix: deactivating the plugin no longer deletes its settings; they are removed only when the plugin is deleted
+* The notice after an update shows what is new, with the video, instead of the old message about Mapbox: the free OpenStreetMap maps do not need a Mapbox key
+* A short request to leave a review, two weeks after the installation or the update (only for administrators, on the dashboard, the plugins page and the WP GPX Maps page; it can be postponed or turned off)
+* Links to leave a review, to support the development and to get notified about WP GPX Maps Pro at the top of the WP GPX Maps page
 
 = 1.10.02 =
 * Fix: the max grade in the summary is measured over about 200 m instead of 100 m, so a small elevation error of the GPS no longer gives grades like 50-70% (tested also on 30,000-point tracks); the track colors by grade do not change
@@ -454,6 +473,12 @@ Yes, WP GPX Maps is free and open source (GPLv2 or later).
 * nextgen gallery display bug fixes
 
 == Upgrade Notice ==
+
+= 1.10.04 =
+New plugin name and description, no change to your maps.
+
+= 1.10.03 =
+Deactivating the plugin no longer resets its settings.
 
 = 1.10.02 =
 More realistic max grade in the summary.
