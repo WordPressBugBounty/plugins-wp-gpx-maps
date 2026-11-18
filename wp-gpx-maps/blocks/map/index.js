@@ -96,6 +96,8 @@
 	/*
 	 * The server-rendered map contains an inline module script: scripts added with innerHTML do not run,
 	 * so every new one is copied into a real script element (also inside the editor iframe).
+	 * It waits until the preview stops changing: before WordPress 6.3 ServerSideRender mounts the same HTML
+	 * twice in a row, and running the copy of the first one too started two maps on the same elements.
 	 */
 	function useRunMapScripts( ref, hasPreview ) {
 		useEffect( () => {
@@ -103,6 +105,12 @@
 			if ( ! node ) {
 				return;
 			}
+			const win = node.ownerDocument.defaultView;
+			let timer = 0;
+			const schedule = () => {
+				win.clearTimeout( timer );
+				timer = win.setTimeout( run, 100 );
+			};
 			const run = () => {
 				node.querySelectorAll( 'script[type="module"]:not([data-wpgpxmaps-done])' ).forEach( ( original ) => {
 					original.setAttribute( 'data-wpgpxmaps-done', '1' );
@@ -113,10 +121,13 @@
 					original.after( script );
 				} );
 			};
-			const observer = new node.ownerDocument.defaultView.MutationObserver( run );
+			const observer = new win.MutationObserver( schedule );
 			observer.observe( node, { childList: true, subtree: true } );
-			run();
-			return () => observer.disconnect();
+			schedule();
+			return () => {
+				observer.disconnect();
+				win.clearTimeout( timer );
+			};
 		}, [ hasPreview ] );
 	}
 
@@ -294,7 +305,16 @@
 					},
 					__( 'Use plugin settings for all options' )
 				)
-			)
+			),
+			/* What the separate Pro add-on adds, closed by default; not shown when Pro is active */
+			data.proUrl
+				? el(
+					PanelBody,
+					{ title: __( 'More with WP GPX Maps Pro' ), initialOpen: false },
+					el( 'p', null, __( 'For readers on the trail: offline map and navigation on the phone, stages that end at the huts, weather and sun along the route, story maps that follow the text.' ) ),
+					el( 'p', null, el( 'a', { href: data.proUrl, target: '_blank', rel: 'noopener noreferrer' }, __( 'See what Pro adds and get the launch discount' ) ) )
+				)
+				: null
 		);
 
 		if ( ! attributes.gpx ) {
